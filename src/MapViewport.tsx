@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Crosshair, Grid2X2, Minus, Plus, Trees, Maximize2 } from 'lucide-react';
 import { ASSETS, TERRAINS } from './domain';
+import { nextZoom } from './viewportMath';
 import type { Project, MapObject, Tool, Tile } from './types';
 
 const TW = 38, TH = 19, EH = 3;
@@ -52,7 +53,7 @@ export default function MapViewport({project,tool,terrain,asset,player,brush,sel
  useEffect(()=>{const down=(e:KeyboardEvent)=>{if(e.key==='Escape'&&interaction.current){interaction.current=null;draftRef.current=null;setDraft(null);setSpace(false);return;}if(e.code==='Space'&&!/INPUT|TEXTAREA/.test((e.target as HTMLElement)?.tagName)){e.preventDefault();setSpace(true);}},up=(e:KeyboardEvent)=>{if(e.code==='Space')setSpace(false);};window.addEventListener('keydown',down);window.addEventListener('keyup',up);return()=>{window.removeEventListener('keydown',down);window.removeEventListener('keyup',up);};},[]);
  const screenToMap=(sx:number,sy:number)=>{const rx=(sx-camera.x)/camera.zoom,ry=(sy-camera.y)/camera.zoom;const base={x:Math.floor(ry/TH+rx/TW),y:Math.floor(ry/TH-rx/TW)};let best=base,bestDepth=-Infinity;for(let dy=-1;dy<=4;dy++)for(let dx=-1;dx<=4;dx++){const x=base.x+dx,y=base.y+dy;if(x<0||y<0||x>=project.map.width||y>=project.map.height)continue;const tile=project.map.tiles[y*project.map.width+x],tx=(x-y)*TW/2,ty=(x+y+1)*TH/2-tile.elevation*EH;const distance=Math.abs(rx-tx)/(TW/2)+Math.abs(ry-ty)/(TH/2);if(distance<=1.001&&x+y>bestDepth){best={x,y};bestDepth=x+y;}}return best;};
  const bounds=(p:{x:number,y:number})=>p.x>=0&&p.y>=0&&p.x<project.map.width&&p.y<project.map.height;
- const zoom=(factor:number,sx=size.w/2,sy=size.h/2)=>setCamera(c=>{const z=Math.max(.18,Math.min(3.5,c.zoom*factor)),r=z/c.zoom;return{x:sx-(sx-c.x)*r,y:sy-(sy-c.y)*r,zoom:z};});
+ const zoom=(factor:number,sx=size.w/2,sy=size.h/2)=>setCamera(c=>{const z=nextZoom(c.zoom,factor),r=z/c.zoom;return{x:sx-(sx-c.x)*r,y:sy-(sy-c.y)*r,zoom:z};});
  useEffect(()=>{const c=canvasRef.current;if(!c)return;const handler=(e:WheelEvent)=>{e.preventDefault();const r=c.getBoundingClientRect();zoom(Math.exp(-e.deltaY*.0015),e.clientX-r.left,e.clientY-r.top);};c.addEventListener('wheel',handler,{passive:false});return()=>c.removeEventListener('wheel',handler);},[size]);
  useEffect(()=>{const c=canvasRef.current;if(!c)return;const dpr=Math.min(window.devicePixelRatio||1,2);c.width=size.w*dpr;c.height=size.h*dpr;const ctx=c.getContext('2d')!;ctx.scale(dpr,dpr);ctx.fillStyle='#202932';ctx.fillRect(0,0,size.w,size.h);
   ctx.fillStyle='#788a9830';for(let y=20;y<size.h;y+=24)for(let x=20;x<size.w;x+=24)ctx.fillRect(x,y,1,1);

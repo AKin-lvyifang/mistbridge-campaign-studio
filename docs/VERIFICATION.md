@@ -2,7 +2,7 @@
 
 ## Passed on the development Linux environment
 
-- `npm test`: 50 TypeScript domain/provider/render tests using Vitest 5.0.3.
+- `npm test`: 55 TypeScript domain/provider/render/viewport tests using Vitest 5.0.3.
 - `npm run build`: TypeScript and optimized Vite build pass.
 - `npm run test:native`: 21 real-file Python/HTTP/packaging tests pass.
 - `npm run test:desktop`: 11 launcher/protocol unit tests pass.
