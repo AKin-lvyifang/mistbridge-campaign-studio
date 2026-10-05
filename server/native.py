@@ -16,6 +16,12 @@ class NativeError(ValueError):
     pass
 
 
+def worker_command(input_path: Path, output_path: Path) -> list[str]:
+    if getattr(sys, 'frozen', False):
+        return [sys.executable, '--worker', str(input_path), str(output_path)]
+    return [sys.executable, '-m', 'server.native_worker', str(input_path), str(output_path)]
+
+
 def run_worker(request: dict, directory: Path, timeout: int = 60) -> dict:
     token = uuid.uuid4().hex
     input_path = directory / f'{token}.request.json'
@@ -25,10 +31,10 @@ def run_worker(request: dict, directory: Path, timeout: int = 60) -> dict:
     environment['PYTHONPATH'] = str(ROOT)
     environment['PYTHONDONTWRITEBYTECODE'] = '1'
     try:
-        completed = subprocess.run([sys.executable, '-m', 'server.native_worker', str(input_path), str(output_path)],
+        completed = subprocess.run(worker_command(input_path, output_path),
                                    cwd=directory, env=environment, stdin=subprocess.DEVNULL,
                                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=timeout,
-                                   check=False)
+                                   check=False, creationflags=subprocess.CREATE_NO_WINDOW if sys.platform == 'win32' else 0)
     except subprocess.TimeoutExpired as exc:
         raise NativeError('Native operation exceeded the 60-second limit.') from exc
     if completed.returncode != 0 or not output_path.is_file():

@@ -16,8 +16,12 @@
     "test:native": "node scripts/test-native.mjs",
     "check": "npm run test && npm run build && npm run test:native",
     "desktop": "electron .",
-    "desktop:package": "npm run build && electron-builder --dir",
-    "benchmark": "node --import tsx scripts/benchmark.ts"
+    "desktop:package": "npm run build && npm run native:build && npm run native:smoke && node scripts/package-desktop.mjs",
+    "benchmark": "node --import tsx scripts/benchmark.ts",
+    "native:build": "node scripts/build-native.mjs",
+    "native:smoke": "node scripts/package-smoke.mjs",
+    "desktop:dir": "npm run build && npm run native:build && npm run native:smoke && node scripts/package-desktop.mjs --dir",
+    "test:desktop": "node --test electron/*.test.cjs"
   },
   "dependencies": {
     "fflate": "^0.8.3",
@@ -44,24 +48,28 @@
     "files": [
       "dist/**",
       "electron/**",
+      "!electron/**/*.test.cjs",
       "package.json"
     ],
     "extraResources": [
       {
-        "from": "server",
-        "to": "server"
+        "from": "build/native/studio-native",
+        "to": "native",
+        "filter": [
+          "**/*"
+        ]
       },
       {
-        "from": "requirements.txt",
-        "to": "requirements.txt"
+        "from": "LICENSE",
+        "to": "LICENSE"
       },
       {
-        "from": "fixtures",
-        "to": "fixtures"
+        "from": "THIRD-PARTY-NOTICES.md",
+        "to": "THIRD-PARTY-NOTICES.md"
       },
       {
-        "from": "dist",
-        "to": "dist"
+        "from": "docs/THIRD-PARTY-LICENSES.txt",
+        "to": "THIRD-PARTY-LICENSES.txt"
       }
     ],
     "mac": {
@@ -69,18 +77,37 @@
         "dmg",
         "zip"
       ],
-      "category": "public.app-category.developer-tools"
+      "category": "public.app-category.developer-tools",
+      "identity": null,
+      "minimumSystemVersion": "13.0"
     },
     "win": {
       "target": [
         "nsis",
         "portable"
-      ]
+      ],
+      "signAndEditExecutable": false
     },
     "linux": {
       "target": [
         "AppImage"
       ]
+    },
+    "directories": {
+      "output": "release"
+    },
+    "artifactName": "${productName}-${version}-${os}-${arch}-unsigned.${ext}",
+    "asar": true,
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "deleteAppDataOnUninstall": false,
+      "artifactName": "${productName}-${version}-${os}-${arch}-setup-unsigned.${ext}"
+    },
+    "publish": null,
+    "portable": {
+      "artifactName": "${productName}-${version}-${os}-${arch}-portable-unsigned.${ext}"
     }
   }
 }

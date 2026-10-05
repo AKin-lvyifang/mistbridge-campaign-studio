@@ -70,7 +70,7 @@ Cmd/Ctrl+S 保存工程，Cmd/Ctrl+O 打开，Cmd/Ctrl+Z 撤销。文本输入�
 - **剧情：** 节点时间从场景开始计算；移动下达命令后不会自动等待抵达。没有到达/阵亡分支、音频、完整战役容器、XS/DUC 编译。
 - **导入：** 已有触发器作为不透明原生内容保留；UI 不反编译成高级剧情。重新导入已导出的场景会把这些触发器显示为「保留触发器」。
 - **兼容性：** 只接收通过测试的普通 DE 1.59；拒绝未知版本/尾部/变体，未知或特殊对象保持锁定占位。不承诺 HD、RoR、Chronicles、模组或所有资料片。
-- **桌面：** Electron 主进程、原生菜单和双平台打包配置已提供。`npm run desktop` 是开发者启动方式；`desktop:package` 目前仅构建开发者 shell，尚未捆绑 Python。没有已测试、已签名、公证的 macOS/Windows 安装包。
+- **桌面：** 已实现 Electron 原生菜单、自包含 Python 编译服务、稳定本地工程存储和双平台打包流程。Linux x64 冻结运行时已通过真实导入/导出测试。macOS（13+，Apple Silicon / Intel）及 Windows x64 安装包仍需对应 CI 验证，签名与公证未完成。详见 [桌面打包](docs/DESKTOP-PACKAGING.md)。
 - **网页预览：** 静态预览仅支持工程编辑/保存与 AI 脚本，不调用原生服务；原生场景导入/导出必须在本地完整版本执行。
 
 ## 检查与性能
@@ -83,7 +83,7 @@ npm run check        # All three
 npm run benchmark    # Repeatable generation/validation timings
 ```
 
-CI 在 Linux、macOS、Windows 上运行代码与样例检查；仅仓库出现成功结果后才可说该平台验证通过。没有游戏运行器，也不会把 CI 结果误称为游戏验证。
+CI 配置在 Linux、macOS、Windows 上运行代码与样例检查，并分别为 macOS arm64/x64 与 Windows x64 构建未签名应用；仅仓库出现成功结果后才可说该平台验证通过。没有游戏运行器，也不会把 CI 结果误称为游戏验证。
 
 真实测量及测试边界见 [验证报告](docs/VERIFICATION.md)、[生成基准 JSON](docs/benchmark.json)、[原生基准 JSON](docs/native-benchmark.json)。测量是当前机器上的实际结果，不能替代浏览器帧率或游戏性能。
 
@@ -94,8 +94,8 @@ src/                React UI、类型、领域逻辑、Canvas 等距视口
 server/             FastAPI 本机接口、严格校验、单次原生子进程
 fixtures/           公开空白样例、原创回归/示例场景与来源校验和
 scripts/            启动、测试与真实基准
- electron/          Electron 原生菜单与隔离 preload
- docs/              设计系统、生成/原生边界、验证与发布清单
+electron/          Electron 原生菜单与隔离 preload
+docs/              设计系统、生成/原生边界、验证与发布清单
 ```
 
 技术选择：React 19 + TypeScript、Radix Primitives、Lucide、Vite、Canvas2D、FastAPI/Pydantic 与固定 AoE2ScenarioParser 0.9.4。UI 设计参考 Apple HIG 与成熟游戏编辑器，具体 token、组件与平台约定在 [设计系统](docs/DESIGN-SYSTEM.md)。

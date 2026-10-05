@@ -16,4 +16,4 @@ One authoritative `Project` object is shared by the map viewport, story dock, AI
 
 Electron has context isolation, sandboxed renderer, no Node integration, deny-by-default permissions and same-origin navigation. It exposes only a small menu-command bridge. Native macOS/Windows menus share renderer commands.
 
-The current source launch uses a project-local Python environment. A standalone native-runtime bundle, platform QA, signing and notarization remain required before releasing end-user installers. CI source tests across three OSes do not substitute for those checks.
+The source launch uses a project-local Python environment; packaged builds use an included PyInstaller runtime and a stable studio://app renderer origin over an owned ephemeral loopback service. Frozen Linux import/export has been tested. Platform installer CI, clean-machine QA, signing and notarization remain required before claiming end-user release readiness. See DESKTOP-PACKAGING.md.

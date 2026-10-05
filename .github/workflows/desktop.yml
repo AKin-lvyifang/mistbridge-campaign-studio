@@ -1,0 +1,67 @@
+name: Build unsigned desktop apps
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  desktop:
+    name: Unsigned desktop (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-15, macos-15-intel, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 35
+    env:
+      CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install locked application and packaging dependencies
+        run: |
+          npm ci
+          python -m pip install -r requirements.txt -r requirements-build.txt
+      - name: Check source, native guards and launcher
+        run: |
+          npm run check
+          npm run test:desktop
+          node --check electron/main.cjs
+      - name: Build native runtime and unsigned platform artifacts
+        run: npm run desktop:package
+      - name: Verify resources copied into the packaged application
+        run: node scripts/package-smoke.mjs --packaged
+      - name: Launch packaged application and test renderer and native service
+        run: node scripts/package-app-smoke.mjs
+      - name: Preserve runtime smoke evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: desktop-smoke-${{ runner.os }}-${{ runner.arch }}-${{ github.sha }}
+          path: |
+            build/smoke
+            build/pyinstaller/build-native/warn-build-native.txt
+          retention-days: 30
+          if-no-files-found: warn
+      - name: Preserve unsigned installers and corresponding sources
+        uses: actions/upload-artifact@v4
+        with:
+          name: unsigned-desktop-${{ runner.os }}-${{ runner.arch }}-${{ github.sha }}
+          path: |
+            release/*.dmg
+            release/*.zip
+            release/*.exe
+            build/corresponding-source/*
+            build/native-licenses/native-build.json
+          if-no-files-found: error
+          retention-days: 30
+# Success is evidence for the exact runner OS/architecture and commit only.
+# Signing, notarization, clean-machine install/uninstall and game acceptance
+# remain separate release gates. No release publishing or credentials are used.

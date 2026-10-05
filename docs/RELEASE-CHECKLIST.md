@@ -1,11 +1,11 @@
 # Desktop / game release checklist
 
-Current deliverable: runnable source + built web frontend + native Python compiler, not a signed installer.
+Current deliverable: runnable source, compiled web frontend and a working self-contained native runtime + desktop packaging pipeline. Linux runtime smoke passes. macOS/Windows installers require the exact-commit CI results; no signed installer is claimed.
 
 Before distributing an end-user desktop installer:
 
-- [ ] Freeze and bundle a Python runtime with exact dependency/license source obligations; adapt subprocess workers to frozen executable mode.
-- [ ] Use patched supported Electron and dependency versions; audit exact lockfile.
+- [x] Freeze and bundle Python with exact dependencies, license/source notices and isolated self-executing workers (Linux verified; target OS checks remain).
+- [x] Use patched Electron 44.5.1 and exact dependency lock; full npm audit reports zero advisories.
 - [ ] Build on real macOS and Windows runners, preserve logs/artifacts and verify exact commit.
 - [ ] Package native fixtures, built frontend, Python runtime and parser version data; test on a clean machine without Python/Node installed.
 - [ ] Smoke test install, launch, quit, macOS close/reopen, update/uninstall, Unicode filenames and non-ASCII home paths.

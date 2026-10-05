@@ -12,3 +12,6 @@ test-results/
 !.env.example
 
 *.tsbuildinfo
+
+# Native packaging outputs (rebuild per OS/architecture)
+build/
