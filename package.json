@@ -1,0 +1,86 @@
+{
+  "name": "aoe2-campaign-studio",
+  "version": "0.1.0",
+  "private": true,
+  "description": "An original, open-source Age of Empires II DE scenario authoring workbench",
+  "license": "GPL-3.0-only",
+  "type": "module",
+  "main": "electron/main.cjs",
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "dev:ui": "vite --host 127.0.0.1",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview --host 127.0.0.1",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:native": "node scripts/test-native.mjs",
+    "check": "npm run test && npm run build && npm run test:native",
+    "desktop": "electron .",
+    "desktop:package": "npm run build && electron-builder --dir",
+    "benchmark": "node --import tsx scripts/benchmark.ts"
+  },
+  "dependencies": {
+    "fflate": "^0.8.3",
+    "lucide-react": "^0.468.0",
+    "radix-ui": "^1.4.3",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.55.1",
+    "@types/react": "^19.1.16",
+    "@types/react-dom": "^19.1.9",
+    "@vitejs/plugin-react": "^5.0.4",
+    "electron": "^44.5.1",
+    "electron-builder": "^26.15.3",
+    "tsx": "^4.20.6",
+    "typescript": "~5.9.3",
+    "vite": "^7.1.7",
+    "vitest": "^5.0.3"
+  },
+  "build": {
+    "appId": "org.mistbridge.campaignstudio",
+    "productName": "Mistbridge Studio",
+    "files": [
+      "dist/**",
+      "electron/**",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "server",
+        "to": "server"
+      },
+      {
+        "from": "requirements.txt",
+        "to": "requirements.txt"
+      },
+      {
+        "from": "fixtures",
+        "to": "fixtures"
+      },
+      {
+        "from": "dist",
+        "to": "dist"
+      }
+    ],
+    "mac": {
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "category": "public.app-category.developer-tools"
+    },
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ]
+    },
+    "linux": {
+      "target": [
+        "AppImage"
+      ]
+    }
+  }
+}

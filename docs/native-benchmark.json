@@ -1,0 +1,83 @@
+{
+  "measuredAt": "2026-10-05T16:28:16.098239+00:00",
+  "python": "3.12.14",
+  "platform": "Linux-6.18.44-x86_64-with-glibc2.41",
+  "machine": "x86_64",
+  "logicalCpus": 9,
+  "parser": "0.9.4",
+  "fastapi": "0.141.1",
+  "method": "Three sequential wall-clock samples per case with time.perf_counter. Each import starts a fresh worker; each export compiles and verifies in two fresh workers. Concurrent development tasks may affect timings.",
+  "fixtureSha256": "11ea2ea6d3c89891e1abc1e137db9e33e5a801cc7c7bb29158c2e136c3042a35",
+  "generatedProjectSha256": "a19c96551dcbb60b574097ed2394c8419f6a391c02eb48eda9e4449d2386a9cb",
+  "newProject": {
+    "width": 120,
+    "height": 120,
+    "objects": 326,
+    "storyNodes": 4
+  },
+  "gameTested": false,
+  "cases": [
+    {
+      "name": "import_preservation_80",
+      "seconds": [
+        0.5784,
+        0.8149,
+        0.7369
+      ],
+      "medianSeconds": 0.7369,
+      "minSeconds": 0.5784,
+      "maxSeconds": 0.8149
+    },
+    {
+      "name": "noop_export_preservation_80",
+      "seconds": [
+        1.2923,
+        1.44,
+        1.3611
+      ],
+      "medianSeconds": 1.3611,
+      "minSeconds": 1.2923,
+      "maxSeconds": 1.44,
+      "outputBytes": 967,
+      "sha256": "11ea2ea6d3c89891e1abc1e137db9e33e5a801cc7c7bb29158c2e136c3042a35",
+      "verified": true,
+      "objects": 4,
+      "triggers": 1,
+      "byteIdentical": true
+    },
+    {
+      "name": "edited_export_preservation_80",
+      "seconds": [
+        2.0948,
+        4.8871,
+        2.0894
+      ],
+      "medianSeconds": 2.0948,
+      "minSeconds": 2.0894,
+      "maxSeconds": 4.8871,
+      "outputBytes": 973,
+      "sha256": "fcf4a79a0344d6dcdc98091fc2498afd9a1e713d86f6b52bc3ac7c96bdda3d56",
+      "verified": true,
+      "objects": 4,
+      "triggers": 1,
+      "byteIdentical": false
+    },
+    {
+      "name": "new_mistbridge_export_120",
+      "seconds": [
+        4.0411,
+        4.9545,
+        4.5557
+      ],
+      "medianSeconds": 4.5557,
+      "minSeconds": 4.0411,
+      "maxSeconds": 4.9545,
+      "outputBytes": 5606,
+      "sha256": "638cb7aca3fcddd1bedf74d928c6931d67b9ca0cb4428c48c0bffa4d1eb2e28f",
+      "verified": true,
+      "objects": 326,
+      "triggers": 4,
+      "byteIdentical": false
+    }
+  ]
+}

@@ -1,0 +1,45 @@
+; Mistbridge Campaign Studio - rule-based PER starter
+; Profile: Campaign Guard; suggested scenario player: 2
+; Save as Mistbridge.per with an empty matching Mistbridge.ai loader.
+; Select this AI for that player in the game editor; this file does not assign it.
+; Requires starting buildings/resources, population room, and in-game testing.
+; This is a limited template, not a complete competitive AI.
+
+(defrule
+  (true)
+=>
+  (set-strategic-number sn-food-gatherer-percentage 45)
+  (set-strategic-number sn-wood-gatherer-percentage 35)
+  (set-strategic-number sn-gold-gatherer-percentage 20)
+  (set-strategic-number sn-stone-gatherer-percentage 0)
+  (set-strategic-number sn-percent-attack-soldiers 0)
+  (disable-self)
+)
+
+(defrule
+  (unit-type-count-total villager < 8)
+  (can-train villager)
+=>
+  (train villager)
+)
+
+(defrule
+  (housing-headroom < 4)
+  (can-build house)
+=>
+  (build house)
+)
+
+(defrule
+  (building-type-count-total barracks < 1)
+  (can-build barracks)
+=>
+  (build barracks)
+)
+
+(defrule
+  (unit-type-count-total militiaman-line < 12)
+  (can-train militiaman-line)
+=>
+  (train militiaman-line)
+)

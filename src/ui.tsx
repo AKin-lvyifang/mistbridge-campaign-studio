@@ -1,0 +1,8 @@
+import { Dialog, Tabs, Tooltip, DropdownMenu } from 'radix-ui';
+import { X } from 'lucide-react';
+import type { ReactNode, ButtonHTMLAttributes } from 'react';
+export const UI={Tabs,DropdownMenu};
+export function UiProvider({children}:{children:ReactNode}){return <Tooltip.Provider delayDuration={450}>{children}</Tooltip.Provider>}
+export function Button({icon,children,tip,variant='',...props}:ButtonHTMLAttributes<HTMLButtonElement>&{icon?:ReactNode;tip?:string;variant?:string}){const element=<button {...props} className={`${props.className||''} ${variant}`} aria-label={props['aria-label']||(typeof children==='string'?children:tip)}>{icon}{children}</button>;return tip?<Tooltip.Root><Tooltip.Trigger asChild>{element}</Tooltip.Trigger><Tooltip.Portal><Tooltip.Content className="tooltip" sideOffset={6}>{tip}<Tooltip.Arrow/></Tooltip.Content></Tooltip.Portal></Tooltip.Root>:element;}
+export function Modal({open,onOpenChange,title,description,children,wide=false}:{open:boolean;onOpenChange:(o:boolean)=>void;title:string;description:string;children:ReactNode;wide?:boolean}){return <Dialog.Root open={open} onOpenChange={onOpenChange}><Dialog.Portal><Dialog.Overlay className="dialog-overlay"/><Dialog.Content className={`dialog ${wide?'wide':''}`}><div className="dialog-header"><Dialog.Title>{title}</Dialog.Title><Dialog.Close asChild><Button tip="关闭" icon={<X size={18}/>}/></Dialog.Close></div><Dialog.Description className="dialog-description">{description}</Dialog.Description>{children}</Dialog.Content></Dialog.Portal></Dialog.Root>}
+export function Field({label,children,hint}:{label:string;children:ReactNode;hint?:string}){return <label className="field"><span>{label}</span>{children}{hint&&<small>{hint}</small>}</label>}

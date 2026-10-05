@@ -1,0 +1,12 @@
+import { spawn } from 'node:child_process';
+import { existsSync } from 'node:fs';
+import path from 'node:path';
+const windows=process.platform==='win32';
+const python=process.env.PYTHON || (existsSync(windows?'.venv/Scripts/python.exe':'.venv/bin/python')?(windows?'.venv/Scripts/python.exe':'.venv/bin/python'):(windows?'python':'python3'));
+const backend=spawn(python,['-m','uvicorn','server.app:app','--host','127.0.0.1','--port','8787'],{stdio:'inherit'});
+const frontend=spawn(process.execPath,['node_modules/vite/bin/vite.js','--host',process.env.STUDIO_HOST||'127.0.0.1'],{stdio:'inherit'});
+let stopping=false;const cleanup=()=>{if(stopping)return;stopping=true;backend.kill();frontend.kill();};
+process.on('SIGINT',cleanup);process.on('SIGTERM',cleanup);process.on('exit',cleanup);
+backend.on('error',e=>console.error('Native service unavailable:',e.message));
+frontend.on('exit',code=>{cleanup();process.exitCode=code||0;});
+backend.on('exit',code=>{if(code&&!stopping)console.error('Native compiler stopped. UI editing remains available. Run pip install -r requirements.txt in your venv.');});

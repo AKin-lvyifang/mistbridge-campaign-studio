@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "parser": {
+    "name": "AoE2ScenarioParser",
+    "version": "0.9.4",
+    "releaseUrl": "https://pypi.org/project/AoE2ScenarioParser/0.9.4/",
+    "wheelUrl": "https://files.pythonhosted.org/packages/02/f3/9d833a42a74fe2a29f39dfc4492a34f968b694f33ac39a8eed595c8598f5/aoe2scenarioparser-0.9.4-py3-none-any.whl",
+    "wheelSha256": "2bc1c926ced9d606a3b1c69b9d6b453262ef84cf381664028044d546b3533045",
+    "sourceArchiveSha256": "722cf1ce44b7f3a7d4ba2562191fcdf65065e9b69d4de6671b1c49096e081a55",
+    "upstreamCommit": "e5b483a80f2e6096f019a8ea128eed3aa4f9f188",
+    "licenseFile": "upstream/LICENSE.AoE2ScenarioParser",
+    "licenseFinding": "The pinned wheel includes GPL version 3 text. Metadata says MIT. This project follows the conservative GPL-3.0-only distribution path; metadata conflict remains an upstream issue."
+  },
+  "fixtures": [
+    {
+      "path": "upstream/default-1.59.aoe2scenario",
+      "version": "1.59",
+      "variant": "AoE2",
+      "bytes": 642,
+      "sha256": "99155dfc6c6487220f6b982808ff1aad552f6985027e9aa1e10e2eb74ab5928b",
+      "source": "AoE2ScenarioParser/versions/DE/v1.59/default.aoe2scenario within the pinned wheel",
+      "upstreamUrl": "https://github.com/KSneijders/AoE2ScenarioParser/blob/e5b483a80f2e6096f019a8ea128eed3aa4f9f188/AoE2ScenarioParser/versions/DE/v1.59/default.aoe2scenario",
+      "description": "Upstream blank 80 × 80 map, no objects, no triggers; no textures, sprites, audio or proprietary campaign content."
+    },
+    {
+      "path": "preservation-1.59.aoe2scenario",
+      "version": "1.59",
+      "variant": "AoE2",
+      "sha256": "11ea2ea6d3c89891e1abc1e137db9e33e5a801cc7c7bb29158c2e136c3042a35",
+      "source": "Original synthetic regression fixture derived from the public blank by fixtures/rebuild_derived.py",
+      "description": "Four ID-only objects including a synthetic unsupported ID, an existing trigger with a unit reference, Chinese text, a nondefault terrain layer, hints and a player resource setting. Not intended to be played because synthetic native ID 65000 is deliberately unsupported."
+    },
+    {
+      "path": "generated-mistbridge-1.59.aoe2scenario",
+      "version": "1.59",
+      "variant": "AoE2",
+      "bytes": 5606,
+      "sha256": "638cb7aca3fcddd1bedf74d928c6931d67b9ca0cb4428c48c0bffa4d1eb2e28f",
+      "source": "Original Mistbridge generated-mistbridge-project.json, authored by this application; exported using python -m server.benchmark",
+      "description": "120 × 120 generated map; 326 ID-only native objects; four authored native story triggers. Fresh-process parser verification passed; not yet tested in the game."
+    }
+  ],
+  "gameTested": false
+}
