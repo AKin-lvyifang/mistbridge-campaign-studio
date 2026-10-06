@@ -4,7 +4,7 @@ from PyInstaller.utils.hooks import collect_data_files, collect_submodules, copy
 
 root = Path(SPECPATH).parent
 parser_data = collect_data_files('AoE2ScenarioParser', excludes=['dependencies/**'])
-data = parser_data + copy_metadata('AoE2ScenarioParser', recursive=True)
+data = copy_metadata('genieutils-py') + copy_metadata('Pillow') + parser_data + copy_metadata('AoE2ScenarioParser', recursive=True) + collect_data_files('certifi') + copy_metadata('httpx', recursive=True)
 for folder in ['fixtures', 'dist']:
     for source in (root / folder).rglob('*'):
         if source.is_file() and '__pycache__' not in source.parts and source.suffix not in {'.py', '.pyc'}:
@@ -14,9 +14,9 @@ for source in (root / 'build/native-licenses').rglob('*'):
         data.append((str(source), 'licenses/' + str(source.relative_to(root / 'build/native-licenses').parent)))
 
 a = Analysis([str(root / 'server/entrypoint.py')], pathex=[str(root)], binaries=[], datas=data,
-             hiddenimports=['server.native_worker', 'server.app', *collect_submodules('AoE2ScenarioParser'),
+             hiddenimports=['server.asset_worker', 'PIL.DdsImagePlugin', 'PIL.PngImagePlugin', *collect_submodules('genieutils'), 'server.native_worker', 'server.app', 'server.deepseek', 'server.provider', *collect_submodules('AoE2ScenarioParser'),
                             *collect_submodules('uvicorn')],
-             excludes=['pytest', 'httpx', 'tkinter', 'IPython'], noarchive=False)
+             excludes=['pytest', 'tkinter', 'IPython'], noarchive=False)
 pyz = PYZ(a.pure)
 exe = EXE(pyz, a.scripts, [], exclude_binaries=True, name='studio-native', debug=False,
           bootloader_ignore_signals=False, strip=False, upx=False, console=True,

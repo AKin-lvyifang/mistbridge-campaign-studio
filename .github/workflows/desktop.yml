@@ -3,6 +3,9 @@ on:
   push:
   pull_request:
   workflow_dispatch:
+env:
+  NPM_CONFIG_AUDIT: 'false'
+  NPM_CONFIG_FUND: 'false'
 permissions:
   contents: read
 jobs:
@@ -27,7 +30,7 @@ jobs:
           python-version: '3.12'
       - name: Install locked application and packaging dependencies
         run: |
-          npm ci
+          npm ci --no-audit --no-fund
           python -m pip install -r requirements.txt -r requirements-build.txt
       - name: Check source, native guards and launcher
         run: |

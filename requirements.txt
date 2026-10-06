@@ -22,3 +22,6 @@ starlette==1.7.0
 typing-inspection==0.4.4
 typing_extensions==4.16.0
 uvicorn==0.52.1
+
+Pillow==12.3.0
+genieutils-py==0.1.2

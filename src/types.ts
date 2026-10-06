@@ -1,4 +1,4 @@
-export type Tool = 'select' | 'terrain' | 'object' | 'erase' | 'pan';
+export type Tool = 'select' | 'terrain' | 'elevation' | 'object' | 'erase' | 'pan';
 export interface Tile { terrain: number; elevation: number }
 export interface MapObject { id: string; nativeId: number; player: number; x: number; y: number; rotation: number; label: string; category: 'unit'|'building'|'decoration'; nativeReferenceId?: number; locked?: boolean }
 export interface StoryNode { id: string; name: string; enabled: boolean; delay: number; kind: 'dialogue'|'camera'|'move'|'victory'; text: string; player: number; x: number; y: number; objectId?: string; duration: number }

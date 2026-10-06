@@ -18,7 +18,7 @@ def collect_notices() -> None:
     target = BUILD / 'native-licenses'
     target.mkdir(parents=True, exist_ok=True)
     for source in ['LICENSE', 'THIRD-PARTY-NOTICES.md', 'requirements.txt', 'requirements-build.txt',
-                   'docs/THIRD-PARTY-LICENSES.txt', 'fixtures/SOURCES.json', 'fixtures/upstream/LICENSE.AoE2ScenarioParser']:
+                   'docs/THIRD-PARTY-LICENSES.txt', 'docs/SLD-DECODER-NOTICE.md', 'docs/ASSET-DEPENDENCIES.json', 'fixtures/SOURCES.json', 'fixtures/upstream/LICENSE.AoE2ScenarioParser']:
         shutil.copy2(ROOT / source, target / Path(source).name)
     # Preserve licenses from every installed pinned runtime/build distribution.
     versions = {}

@@ -46,3 +46,24 @@ test('stable draft origin is independent of native runtime port', async () => {
   }
   assert.deepEqual(destinations, ['http://127.0.0.1:19001/', 'http://127.0.0.1:29002/']);
 });
+
+test('renderer cancellation propagates to the owned service transport', async () => {
+  const controller = new AbortController();
+  let signal, started;
+  const ready = new Promise(resolve => { started = resolve; });
+  const handler = createNativeHandler(service, async (_url, init) => {
+    signal = init.signal;
+    started();
+    return new Promise((_resolve, reject) => {
+      signal.addEventListener('abort', () => reject(new Error('Aborted')), { once: true });
+    });
+  });
+  const pending = handler(new Request('studio://app/api/lui/chat', {
+    method: 'POST', body: '{}', signal: controller.signal,
+    headers: {'Content-Type': 'application/json'}
+  }));
+  await ready;
+  controller.abort();
+  assert.equal(signal.aborted, true);
+  assert.equal((await pending).status, 503);
+});

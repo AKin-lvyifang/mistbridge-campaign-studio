@@ -10,3 +10,24 @@
 @media(max-width:1200px){.map-toolbar>.tool-label:last-of-type{max-width:200px;overflow:hidden;text-overflow:ellipsis}.behavior-fields{width:205px}.story-node{width:170px}.bottom-tabbar .dock-tabs [role=tab]{font-size:12px;padding:0 7px}.asset-card>span{font-size:12px}}
 
 .about-copy a{color:var(--accent);text-decoration:underline;text-underline-offset:3px}
+
+/* Elevation controls compose the shared toolbar, field and button system. */
+.elevation-legend{position:absolute;top:56px;left:17px;display:flex;align-items:center;gap:8px;color:var(--secondary);font-size:12px;background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:4px 8px;pointer-events:none}.elevation-legend strong{font-weight:550;color:var(--warning);border-left:1px solid var(--border);padding-left:8px}.map-toolbar select[aria-label="高度操作"]{width:100px}.map-toolbar select[aria-label="高度笔刷半径"]{width:96px}.map-toolbar select[aria-label="目标高度"]{width:64px}.map-toolbar{overflow-x:auto;overflow-y:hidden}.map-toolbar .tool-set{flex-shrink:0}.view-actions button{height:30px;width:30px}.viewport-caption{font-size:12px}.viewport>canvas:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+/* Persistent model workbench; credentials stay in a separate ephemeral form. */
+.right-panel-tabs{display:flex;align-items:center;min-height:36px;background:#20252d;border-bottom:1px solid var(--border);padding:0 5px;gap:3px;flex-shrink:0}
+.right-panel-tabs>button{font-size:12px;flex:1;border-radius:0;height:35px;border-bottom:2px solid transparent}
+.right-panel-tabs>button.active{background:transparent;color:var(--accent);border-color:transparent;border-bottom-color:var(--accent)}
+.right-panel-tabs>button:last-child{flex:0 0 29px;padding:0}
+.right-panel-content{display:flex;flex:1;min-height:0;flex-direction:column;overflow:auto}.hidden-pane{display:none!important}
+.lui-pane{flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column}
+.provider-privacy{display:flex;gap:12px;padding:12px;background:var(--raised);border:1px solid var(--border);border-radius:6px;margin-bottom:18px;color:var(--accent)}
+.provider-privacy strong{font-size:13px;color:var(--text)}.provider-privacy p{font-size:12px;line-height:1.65;color:var(--secondary);margin:4px 0 0}
+.provider-session-status{font-size:12px;color:var(--muted);padding:8px 0}
+.workspace{grid-template-columns:246px minmax(360px,1fr) 338px}.workspace.hide-inspector{grid-template-columns:246px minmax(360px,1fr)}
+@media(min-width:1600px){.workspace{grid-template-columns:260px minmax(400px,1fr) 360px}.workspace.hide-inspector{grid-template-columns:260px minmax(400px,1fr)}}
+@media(max-width:1200px){.workspace{grid-template-columns:205px minmax(330px,1fr) 314px}.workspace.hide-inspector{grid-template-columns:205px minmax(330px,1fr)}}
+@media(max-width:1024px){.workspace{grid-template-columns:205px minmax(360px,1fr)}.workspace>.right-dock{width:320px}}
+.provider-destination{display:flex;flex-direction:column;gap:4px;padding:10px 12px;margin:8px 0;background:var(--input);border:1px solid var(--control-border);border-radius:6px;word-break:break-all}.provider-destination span,.provider-destination small{font-size:11px;color:var(--secondary)}.provider-destination strong{font-size:12px;color:var(--accent)}.provider-consent{display:flex;align-items:flex-start;gap:8px;font-size:12px;color:var(--secondary);margin:12px 0}.provider-consent input{flex:none;margin-top:3px}
+.elevation-legend{display:block;width:222px;top:56px;left:17px;padding:9px 11px;background:#1e2229ee;border:1px solid var(--control-border);box-shadow:0 3px 9px #0002;font-variant-numeric:tabular-nums}.elevation-legend strong{border:0;padding:0;color:var(--text)}.height-legend-title,.height-legend-readings,.height-legend-ticks{display:flex;align-items:center;justify-content:space-between}.height-legend-title strong{font-size:12px}.height-legend-title>span{font-size:10px;color:var(--secondary)}.height-legend-readings{margin-top:7px;gap:7px;font-size:11px;white-space:nowrap}.height-legend-readings b{font-size:14px;color:var(--warning);margin-left:2px}.height-legend-scale{height:7px;border-radius:2px;background:linear-gradient(90deg,#344637,#526543,#aa986a,#dbccaf);position:relative;margin-top:9px;border:1px solid #87927e}.height-range{position:absolute;top:-2px;height:9px;outline:1px solid var(--accent);min-width:2px}.height-legend-scale i{position:absolute;top:-6px;transform:translateX(-50%);border-left:4px solid transparent;border-right:4px solid transparent;border-top:5px solid var(--warning)}.height-legend-ticks{font-size:10px;color:var(--secondary);margin-top:2px}.height-brush-target{padding-top:5px;color:var(--secondary);font-size:11px}.height-brush-target strong{color:var(--warning)}
+
+.elevation-legend{pointer-events:auto}

@@ -33,6 +33,8 @@ class DesktopGuard:
                             'headers': [(b'content-type', b'application/json'), (b'cache-control', b'no-store')]})
                 await send({'type': 'http.response.body', 'body': b'{"detail":"Desktop instance token required."}'})
                 return
+        if scope['type'] == 'http':
+            scope = {**scope, 'studio_desktop_owned': True}
         if scope['type'] == 'websocket':
             await send({'type': 'websocket.close', 'code': 1008})
             return
@@ -100,15 +102,37 @@ def self_test() -> None:
         raise RuntimeError('Frozen authored object/story compilation failed.')
     if not (root / 'dist/index.html').is_file():
         raise RuntimeError('Bundled frontend is missing.')
+    from server.native_assets import NativeAssetStore
+    assets = NativeAssetStore()
+    try:
+        asset_status = assets.mount(str(root / 'fixtures/synthetic-assets'))
+        for kind in ('sld', 'dds'):
+            entry = assets.catalog(kind=kind)['entries'][0]
+            preview = assets.decode(entry['id'])
+            if preview['width'] <= 0 or not assets.image(preview['imageUrl'].split('/')[-1]):
+                raise RuntimeError('Frozen synthetic asset preview failed.')
+        assets.load_dat(assets.catalog(kind='dat')['entries'][0]['id'])
+        if not assets.bindings(1, [109])['bindings'][0]['resolved']:
+            raise RuntimeError('Frozen synthetic DAT mapping failed.')
+    finally:
+        assets.clear()
+        assets.directory.cleanup()
     print(json.dumps({'ok': True, 'frozen': bool(getattr(sys, 'frozen', False)),
                       'parserVersion': version('AoE2ScenarioParser'),
                       'nativeVerified': 'fresh-process', 'newMapBytes': len(binary),
                       'authoredObjects': len(authored['objects']), 'authoredTriggers': len(authored['story']),
-                      'gameTested': False}))
+                      'gameTested': False, 'syntheticAssetPreviewVerified': True}))
 
 
 def main(argv=None) -> None:
     args = list(sys.argv[1:] if argv is None else argv)
+    if args and args[0] == '--asset-worker':
+        if len(args) != 3:
+            raise SystemExit('Asset worker requires request and response paths.')
+        from server.asset_worker import main as asset_main
+        sys.argv = [sys.argv[0], *args[1:]]
+        asset_main()
+        return
     if args and args[0] == '--worker':
         if len(args) != 3:
             raise SystemExit('Worker mode requires request and response paths.')

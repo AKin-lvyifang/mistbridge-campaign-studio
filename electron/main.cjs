@@ -1,8 +1,9 @@
 'use strict';
-const { app, BrowserWindow, Menu, shell, session, dialog, protocol } = require('electron');
+const { app, BrowserWindow, Menu, shell, session, dialog, protocol, ipcMain } = require('electron');
 const path = require('node:path');
 const fs = require('node:fs');
 const { NativeService } = require('./native-service.cjs');
+const { installAssetSelection } = require('./asset-selection.cjs');
 const { STUDIO_URL, sameDestination, createNativeHandler } = require('./native-protocol.cjs');
 protocol.registerSchemesAsPrivileged([{ scheme: 'studio', privileges: {
   standard: true, secure: true, supportFetchAPI: true, corsEnabled: true, bypassCSP: false
@@ -85,6 +86,7 @@ else {
       if (result.response === 0) { app.quit(); return; }
       readyUrl = null;
     }
+    installAssetSelection({ ipcMain, dialog, getWindow: () => win, getService: () => native });
     startup = false;
     await createWindow();
     initialized = true;
@@ -104,10 +106,12 @@ async function desktopSmoke() {
       while (!document.querySelector('#root')?.children.length && Date.now() < deadline)
         await new Promise(resolve => setTimeout(resolve, 100));
       const health = await fetch('/api/health').then(response => response.json());
+      const lui = await fetch('/api/lui/status').then(response => response.json());
       return { rendered: !!document.querySelector('#root')?.children.length,
-        bridge: typeof window.studio?.onCommand === 'function', health };
+        bridge: typeof window.studio?.onCommand === 'function', health, lui };
     })()`);
     if (!result.rendered || !result.bridge || result.health.status !== 'ok') throw new Error('Packaged renderer smoke failed.');
+    if (result.lui.configured !== false || result.lui.storage !== 'session-memory') throw new Error('Packaged LUI status smoke failed.');
   };
   await check();
   await win.webContents.executeJavaScript("localStorage.setItem('studio-smoke-continuity', 'ok')");
@@ -132,7 +136,7 @@ async function desktopSmoke() {
 
 function installMenu() {
  const mac=process.platform==='darwin';
- const menu=[...(mac?[{label:app.name,submenu:[{label:'关于雾桥',click:()=>send('about')},{type:'separator'},{role:'services'},{type:'separator'},{role:'hide'},{role:'hideOthers'},{role:'unhide'},{type:'separator'},{role:'quit'}]}]:[]),{label:'文件',submenu:[{label:'新建地图',accelerator:'CmdOrCtrl+N',click:()=>send('new')},{label:'打开工程 / 场景',accelerator:'CmdOrCtrl+O',click:()=>send('open')},{label:'保存工程',accelerator:'CmdOrCtrl+S',click:()=>send('save')},{type:'separator'},{label:'导出场景',click:()=>send('export')},...(mac?[]:[{type:'separator'},{role:'quit'}])]},{label:'编辑',submenu:[{label:'撤销场景编辑',accelerator:'CmdOrCtrl+Alt+Z',click:()=>send('undo')},{label:'重做场景编辑',click:()=>send('redo')},{type:'separator'},{role:'undo'},{role:'redo'},{type:'separator'},{role:'cut'},{role:'copy'},{role:'paste'},{role:'selectAll'}]},{label:'视图',submenu:[{label:'适合窗口',click:()=>send('fit')},{role:'resetZoom'},{role:'zoomIn'},{role:'zoomOut'},{type:'separator'},{role:'togglefullscreen'},...(!app.isPackaged?[{role:'toggleDevTools'}]:[])]},{label:'窗口',submenu:[{role:'minimize'},{role:'zoom'},...(mac?[{role:'front'}]:[])]},{label:'帮助',submenu:[{label:'关于与兼容性',click:()=>send('about')}]}];
+ const menu=[...(mac?[{label:app.name,submenu:[{label:'关于雾桥',click:()=>send('about')},{label:'大模型服务设置',accelerator:'CmdOrCtrl+,',click:()=>send('settings')},{type:'separator'},{role:'services'},{type:'separator'},{role:'hide'},{role:'hideOthers'},{role:'unhide'},{type:'separator'},{role:'quit'}]}]:[]),{label:'文件',submenu:[{label:'新建地图',accelerator:'CmdOrCtrl+N',click:()=>send('new')},{label:'打开工程 / 场景',accelerator:'CmdOrCtrl+O',click:()=>send('open')},{label:'保存工程',accelerator:'CmdOrCtrl+S',click:()=>send('save')},{type:'separator'},{label:'导出场景',click:()=>send('export')},{label:'大模型服务设置',click:()=>send('settings')},...(mac?[]:[{type:'separator'},{role:'quit'}])]},{label:'编辑',submenu:[{label:'撤销场景编辑',accelerator:'CmdOrCtrl+Alt+Z',click:()=>send('undo')},{label:'重做场景编辑',click:()=>send('redo')},{type:'separator'},{role:'undo'},{role:'redo'},{type:'separator'},{role:'cut'},{role:'copy'},{role:'paste'},{role:'selectAll'}]},{label:'视图',submenu:[{label:'适合窗口',click:()=>send('fit')},{role:'resetZoom'},{role:'zoomIn'},{role:'zoomOut'},{type:'separator'},{role:'togglefullscreen'},...(!app.isPackaged?[{role:'toggleDevTools'}]:[])]},{label:'窗口',submenu:[{role:'minimize'},{role:'zoom'},...(mac?[{role:'front'}]:[])]},{label:'帮助',submenu:[{label:'关于与兼容性',click:()=>send('about')}]}];
  Menu.setApplicationMenu(Menu.buildFromTemplate(menu));
 }
 app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });

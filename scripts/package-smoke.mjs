@@ -57,6 +57,14 @@ try {
   const frontend = await fetch(origin, { headers });
   assert.equal(frontend.status, 200);
   assert.match(await frontend.text(), /<html/);
+  const lui = await fetch(origin + '/api/lui/status', { headers });
+  assert.equal(lui.status, 200);
+  const luiStatus = await lui.json();
+  assert.equal(luiStatus.configured, false);
+  assert.equal(luiStatus.storage, 'session-memory');
+  assert.ok(Number.isSafeInteger(luiStatus.sessionRevision) && luiStatus.sessionRevision >= 0);
+  assert.equal('key' in luiStatus, false);
+  assert.equal(lui.headers.get('cache-control'), 'no-store');
   const imported = await fetch(origin + '/api/import?filename=' + encodeURIComponent('雾桥 fixture.aoe2scenario'),
     { method: 'POST', headers: { ...headers, 'Content-Type': 'application/octet-stream', Origin: origin },
       body: fs.readFileSync(path.join(root, 'fixtures/preservation-1.59.aoe2scenario')) });
@@ -85,7 +93,7 @@ try {
   assert.match(error.message, /stopped/);
   await service.stop();
   console.log(JSON.stringify({ ...report, packagedResources: packaged, unicodePath: true,
-    httpNativeRoundtrip: true, privateLoopback: true, shutdown: true, relaunch: true, failureReporting: true }));
+    httpNativeRoundtrip: true, luiUnconfigured: true, privateLoopback: true, shutdown: true, relaunch: true, failureReporting: true }));
 } finally {
   await service?.stop();
   if (blocker) await new Promise(resolve => blocker.close(resolve));

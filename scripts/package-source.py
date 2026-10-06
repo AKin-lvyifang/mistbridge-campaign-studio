@@ -6,6 +6,7 @@ from pathlib import Path
 import subprocess
 import sys
 import tarfile
+import urllib.request
 
 ROOT = Path(__file__).resolve().parent.parent
 DEST = ROOT / 'build/corresponding-source'
@@ -20,6 +21,16 @@ def main() -> None:
                         '--no-build-isolation', '--dest', str(DEST), 'AoE2ScenarioParser==0.9.4'], check=True)
     if hashlib.sha256(source.read_bytes()).hexdigest() != parser['sourceArchiveSha256']:
         raise RuntimeError('Parser source archive does not match fixtures/SOURCES.json. Refusing distribution.')
+    dependency = json.loads((ROOT / 'docs/ASSET-DEPENDENCIES.json').read_text())['genieutils-py']
+    asset_source = DEST / dependency['filename']
+    if not asset_source.is_file():
+        with urllib.request.urlopen(dependency['sourceUrl'], timeout=45) as response:
+            content = response.read(4 * 1024 * 1024)
+        if hashlib.sha256(content).hexdigest() != dependency['sha256']:
+            raise RuntimeError('DAT parser source archive hash mismatch.')
+        asset_source.write_bytes(content)
+    if hashlib.sha256(asset_source.read_bytes()).hexdigest() != dependency['sha256']:
+        raise RuntimeError('DAT parser corresponding source hash mismatch.')
     # Explicit source roots prevent accidental inclusion of credentials, venvs,
     # user projects, node_modules or generated binaries. Snapshot actual inputs.
     files = [ROOT / name for name in ['README.md', 'LICENSE', 'THIRD-PARTY-NOTICES.md', '.gitignore',
@@ -32,7 +43,7 @@ def main() -> None:
         for file in sorted(set(files)):
             if file.is_file() and not file.is_symlink() and '__pycache__' not in file.parts and file.suffix != '.pyc':
                 archive.add(file, arcname='aoe2-campaign-studio/' + file.relative_to(ROOT).as_posix(), recursive=False)
-    manifest = {file.name: hashlib.sha256(file.read_bytes()).hexdigest() for file in [source, output]}
+    manifest = {file.name: hashlib.sha256(file.read_bytes()).hexdigest() for file in [source, asset_source, output]}
     (DEST / 'SHA256SUMS.json').write_text(json.dumps(manifest, indent=2) + '\n')
 
 

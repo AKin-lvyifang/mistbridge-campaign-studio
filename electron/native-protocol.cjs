@@ -26,7 +26,7 @@ function createNativeHandler(service, transport = fetch) {
     if (media) headers['Content-Type'] = media;
     try {
       const response = await transport(service.origin + url.pathname + url.search, {
-        method: request.method, headers, body: request.body, duplex: 'half', redirect: 'error'
+        method: request.method, headers, body: request.body, duplex: 'half', redirect: 'error', signal: request.signal
       });
       const responseHeaders = new Headers(response.headers);
       responseHeaders.delete('x-studio-instance'); // Ownership proof stays in main.
