@@ -28,15 +28,18 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Install locked application and packaging dependencies
-        run: |
-          npm ci --no-audit --no-fund
-          python -m pip install -r requirements.txt -r requirements-build.txt
-      - name: Check source, native guards and launcher
-        run: |
-          npm run check
-          npm run test:desktop
-          node --check electron/main.cjs
+      # One native command per step: PowerShell otherwise reports only the last
+      # external command's exit code and can conceal an earlier npm test failure.
+      - name: Install locked frontend dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Install locked native and packaging dependencies
+        run: python -m pip install -r requirements.txt -r requirements-build.txt
+      - name: Check source and native guards
+        run: npm run check
+      - name: Check desktop launcher tests
+        run: npm run test:desktop
+      - name: Check desktop shell syntax
+        run: node --check electron/main.cjs
       - name: Build native runtime and unsigned platform artifacts
         run: npm run desktop:package
       - name: Verify resources copied into the packaged application

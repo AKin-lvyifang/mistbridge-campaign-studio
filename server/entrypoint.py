@@ -104,14 +104,17 @@ def self_test() -> None:
         raise RuntimeError('Bundled frontend is missing.')
     from server.native_assets import NativeAssetStore
     assets = NativeAssetStore()
+    asset_limits = {}
     try:
         asset_status = assets.mount(str(root / 'fixtures/synthetic-assets'))
         for kind in ('sld', 'dds'):
             entry = assets.catalog(kind=kind)['entries'][0]
             preview = assets.decode(entry['id'])
+            asset_limits[kind] = preview['workerLimits']
             if preview['width'] <= 0 or not assets.image(preview['imageUrl'].split('/')[-1]):
                 raise RuntimeError('Frozen synthetic asset preview failed.')
         assets.load_dat(assets.catalog(kind='dat')['entries'][0]['id'])
+        asset_limits['dat'] = assets.dat['workerLimits']
         if not assets.bindings(1, [109])['bindings'][0]['resolved']:
             raise RuntimeError('Frozen synthetic DAT mapping failed.')
     finally:
@@ -121,7 +124,8 @@ def self_test() -> None:
                       'parserVersion': version('AoE2ScenarioParser'),
                       'nativeVerified': 'fresh-process', 'newMapBytes': len(binary),
                       'authoredObjects': len(authored['objects']), 'authoredTriggers': len(authored['story']),
-                      'gameTested': False, 'syntheticAssetPreviewVerified': True}))
+                      'gameTested': False, 'syntheticAssetPreviewVerified': True,
+                      'syntheticAssetWorkerLimits': asset_limits}))
 
 
 def main(argv=None) -> None:

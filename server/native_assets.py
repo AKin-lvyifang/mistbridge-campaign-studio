@@ -9,10 +9,10 @@ from pathlib import Path
 import stat
 import subprocess
 import sys
-import tempfile
 import threading
 import time
 import uuid
+from server.private_assets import PrivateTemporaryDirectory, protect_file
 
 MAX_FILE = 64 * 1024 * 1024
 MAX_CACHE = 128 * 1024 * 1024
@@ -146,26 +146,26 @@ def run_asset_worker(data: bytes, kind: str, directory: Path) -> tuple[dict, Pat
     request = directory / f'{token}.json'
     output = directory / f'{token}.response'
     target = directory / f'{token}.png'
-    source.write_bytes(data)
-    source.chmod(0o600)
-    request.write_text(json.dumps({'kind': kind, 'source': str(source), 'target': str(target)}))
-    request.chmod(0o600)
     command = [sys.executable, '--asset-worker'] if getattr(sys, 'frozen', False) else [sys.executable, '-m', 'server.asset_worker']
     environment = os.environ.copy()
     environment['PYTHONPATH'] = str(ROOT)
     environment['PYTHONDONTWRITEBYTECODE'] = '1'
     try:
+        source.write_bytes(data)
+        protect_file(source)
+        request.write_text(json.dumps({'kind': kind, 'source': str(source), 'target': str(target)}))
+        protect_file(request)
         result = subprocess.run([*command, str(request), str(output)], cwd=directory, env=environment,
             stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
             timeout=45 if kind == 'dat' else 15, check=False,
             creationflags=subprocess.CREATE_NO_WINDOW if sys.platform == 'win32' else 0)
         if result.returncode or not output.is_file() or output.stat().st_size > 32 * 1024 * 1024:
-            raise AssetError('Decoder stopped or exceeded its resource limit.')
+            raise AssetError(f'Decoder stopped or exceeded its resource limit (exit {result.returncode}).')
         value = json.loads(output.read_text('utf-8'))
         if not value.get('ok'):
             raise AssetError(value.get('error', 'Unsupported asset.'))
         if target.is_file():
-            target.chmod(0o600)
+            protect_file(target)
         return value['result'], target
     except subprocess.TimeoutExpired:
         raise AssetError('Asset decoding exceeded its time limit.') from None
@@ -180,9 +180,8 @@ def run_asset_worker(data: bytes, kind: str, directory: Path) -> tuple[dict, Pat
 class NativeAssetStore:
     def __init__(self):
         self.lock = threading.RLock()
-        self.directory = tempfile.TemporaryDirectory(prefix='mistbridge-assets-')
+        self.directory = PrivateTemporaryDirectory(prefix='mistbridge-assets-')
         self.cache_dir = Path(self.directory.name)
-        self.cache_dir.chmod(0o700)
         self.root: Path | None = None
         self.entries: dict[str, dict] = {}
         self.cache: OrderedDict[str, dict] = OrderedDict()

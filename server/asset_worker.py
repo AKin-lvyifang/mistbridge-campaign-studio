@@ -138,23 +138,32 @@ def work(request):
 
 
 def main():
-    try:
-        import resource
-        resource.setrlimit(resource.RLIMIT_AS, (1536 * 1024 * 1024,) * 2)
-        resource.setrlimit(resource.RLIMIT_CPU, (40, 45))
-        resource.setrlimit(resource.RLIMIT_FSIZE, (64 * 1024 * 1024,) * 2)
-    except ImportError:
-        pass  # Windows uses the parent deadline and parser/image allocation bounds.
+    from server.asset_limits import apply_worker_limits
     response = Path(sys.argv[2])
+    budget = None
     try:
-        request = json.loads(Path(sys.argv[1]).read_text('utf-8'))
-        result = {'ok': True, 'result': work(request)}
-    except (ValueError, NotImplementedError) as exc:
-        # Decoder errors contain only our known format fields, never source paths.
-        result = {'ok': False, 'error': str(exc)[:350]}
-    except Exception:
-        result = {'ok': False, 'error': 'Asset decoding failed. This file or format variant is unsupported.'}
-    response.write_text(json.dumps(result, ensure_ascii=False, allow_nan=False), 'utf-8')
+        try:
+            budget = apply_worker_limits()
+            request = json.loads(Path(sys.argv[1]).read_text('utf-8'))
+            result = {'ok': True, 'result': work(request)}
+            budget.check()
+            result['result']['workerLimits'] = budget.report
+        except (ValueError, NotImplementedError) as exc:
+            # Decoder errors contain only our known format fields, never source paths.
+            result = {'ok': False, 'error': str(exc)[:350]}
+        except Exception:
+            result = {'ok': False, 'error': 'Asset decoding failed. This file or format variant is unsupported.'}
+        # DAT summaries still allocate while serializing/encoding. Keep the RSS
+        # watchdog active until the response is completely written and checked.
+        encoded = json.dumps(result, ensure_ascii=False, allow_nan=False)
+        if budget is not None:
+            budget.check()
+        response.write_text(encoded, 'utf-8')
+        if budget is not None:
+            budget.check()
+    finally:
+        if budget is not None:
+            budget.close()
 
 if __name__ == '__main__':
     main()

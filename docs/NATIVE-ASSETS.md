@@ -17,7 +17,7 @@
 
 实际入口：本地桌面应用顶部「本地素材」。源码启动先安装 requirements.txt，运行 npm run build，再运行 npm run desktop（不要设置 STUDIO_DEV_URL）。静态网页只展示说明，不能选择本机资源目录。
 
-安全与性能边界：单文件 64 MiB；DAT 展开 256 MiB；SLD 4096 单边／4M 像素；DDS 8192 单边／16M 像素；扫描最多 120k 文件系统项目、60k 资源、12 层、15 秒；每次图片解码 15 秒／DAT 45 秒；串行隔离工作进程；私有 0700 会话目录／0600 文件，PNG LRU 上限 128 MiB；渲染器最多 16 个映射／16M 像素。图像每次按源内容哈希查缓存。POSIX 目录与祖先使用 no-follow 描述符链；Windows 文件用打开后句柄路径核对，Windows 目录扫描竞争窗口及实际运行仍未验收。硬杀进程可能留下仅本用户可读的临时缓存，正常关闭由临时目录清理。
+安全与性能边界：单文件 64 MiB；DAT 展开 256 MiB；SLD 4096 单边／4M 像素；DDS 8192 单边／16M 像素；扫描最多 120k 文件系统项目、60k 资源、12 层、15 秒；每次图片解码 15 秒／DAT 45 秒；串行隔离工作进程；POSIX 使用 0700 会话目录／0600 文件；Windows 在创建空缓存目录时原子设置仅当前用户与 SYSTEM 可访问的受保护 DACL，读取实际 ACL 验证后才写入资源，子进程输出继承此 ACL，缓存根目录在使用期间持有禁止删除共享的句柄以防改名替换，PNG LRU 上限 128 MiB；渲染器最多 16 个映射／16M 像素。图像每次按源内容哈希查缓存。POSIX 目录与祖先使用 no-follow 描述符链；Windows 文件用打开后句柄路径核对，Windows 目录扫描竞争窗口及实际运行仍未验收。硬杀进程可能留下仅本用户可读的临时缓存，正常关闭由临时目录清理。
 
 本阶段只支持一个显式资源根，不组合游戏根与模组覆盖层。选择更小的单一目录可避免重复文件名歧义；完整安装目录的大小、当前游戏构建和图形选项仍需实测。
 
@@ -222,3 +222,16 @@ interface PreviewCoverage {
 - 解码在隔离进程／Worker 中执行，限制文件大小、像素总量、帧数、执行时间和图集内存；拒绝目录越界、压缩包路径穿越和异常文件。
 - 若以后增加素材分享或打包发布，应作为独立的明确操作，并检查相应素材授权。
 
+
+
+## 跨平台预算与缓存修复（2026-10-06）
+
+实际 CI 发现：Windows 的 chmod 并不表达 POSIX 权限位；macOS 资源解码进程在无保护的 resource.setrlimit 启动阶段退出。Linux 同一快照通过。Windows 桌面流水线还因 PowerShell 最后一个原生命令的成功退出码掩盖了前面的测试失败。
+
+当前修复保留各层限制：Linux 的 1.5 GiB 虚拟地址空间硬限制；macOS 改用 1.5 GiB 峰值驻留内存 watchdog（每 50ms 检查，并在解析前后检查），避免把系统预留的虚拟地址空间当作资源实际内存占用。Unix CPU 与文件输出限制逐项应用，某一项不可用不会跳过其他项，也不提高继承来的更低限额。各平台原有文件／展开体积／像素／结构数量限制与 15/45 秒父进程截止时间仍生效。Windows 没有声称新增内核内存限额，依靠这些格式分配边界和父进程截止时间。watchdog 是进程级事后检查，不等同于内核预分配硬上限；可测量性中断时直接终止工作进程。
+
+Windows 缓存不再把 chmod 0700/0600 当作隐私证明。新目录使用显式安全描述符创建；只允许当前用户和 SYSTEM 的完整访问，禁止继承其他主体权限，文件继承限制。在读回校验前固定根目录的非删除共享句柄，拒绝符号链接／重解析点，并保持至清理开始，防止可写临时目录父项改名替换缓存根。创建、固定或读回校验失败则拒绝使用缓存。测试在 Windows 上用独立的 PowerShell/.NET ACL 读取核验真实权限和工作进程创建的文件继承。此边界不隔离同一用户的进程、管理员或 SYSTEM。
+
+桌面 CI 每个 run step 只执行一个原生命令，避免后续成功覆盖前面的 npm／Python 失败。冻结运行时 smoke 输出不含路径或数据的 workerLimits 摘要，用于记录各平台实际启用的限制。修复后的 macOS／Windows 结果必须以新提交的 CI 为准；本地 Linux 通过不代表那些平台已通过。
+
+依据：[Python 资源限制](https://docs.python.org/3/library/resource.html)、[Apple XNU RLIMIT_AS 实现](https://github.com/apple-oss-distributions/xnu/blob/main/bsd/kern/kern_resource.c)、[Python Windows chmod](https://docs.python.org/3.12/library/os.html#os.chmod)、[Windows 原子目录安全描述符](https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-createdirectoryw)、[GitHub Actions 退出码](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#exit-codes-and-error-action-preference)。

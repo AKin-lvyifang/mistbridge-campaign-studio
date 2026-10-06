@@ -3,7 +3,6 @@ import io
 import json
 import os
 from pathlib import Path
-import stat
 import struct
 import zlib
 from types import SimpleNamespace
@@ -12,6 +11,7 @@ from PIL import Image
 from fastapi.testclient import TestClient
 from server.native_assets import NativeAssetStore, AssetError, read_selected
 from server.asset_worker import decode_dds, bounded_dat
+from server.private_assets import assert_private_directory, assert_private_file
 from server.app import app
 from server.entrypoint import DesktopGuard
 
@@ -44,7 +44,7 @@ def test_scan_is_relative_and_private(store, resources):
     assert len(catalog['entries']) == 2
     assert all(not Path(e['relativePath']).is_absolute() for e in catalog['entries'])
     assert not any(e['name'] == 'ignore.txt' for e in catalog['entries'])
-    assert stat.S_IMODE(store.cache_dir.stat().st_mode) == 0o700
+    assert_private_directory(store.cache_dir)
 
 def test_decode_real_dds_via_isolated_worker(store):
     item = store.catalog(kind='dds')['entries'][0]
@@ -56,7 +56,7 @@ def test_decode_real_dds_via_isolated_worker(store):
         assert image.convert('RGBA').getpixel((0, 0)) == (40, 180, 90, 255)
     assert store.decode(item['id'])['imageUrl'] == result['imageUrl']
     assert len(list(store.cache_dir.iterdir())) == 1
-    assert stat.S_IMODE(next(store.cache_dir.iterdir()).stat().st_mode) == 0o600
+    assert_private_file(next(store.cache_dir.iterdir()))
 
 def test_hash_change_invalidates_cache(store, resources):
     item = store.catalog(kind='dds')['entries'][0]
@@ -159,3 +159,14 @@ def test_owned_mount_and_api_handles(resources,monkeypatch):
         assert client.post('/api/assets/clear',json={}).status_code==200
         assert client.get(preview['imageUrl']).status_code==404
     test_store.directory.cleanup()
+
+
+def test_worker_private_file_setup_failure_cleans_snapshot(store, monkeypatch):
+    from server import native_assets
+    item = store.catalog(kind='dds')['entries'][0]
+    def fail(_path):
+        raise PermissionError('Synthetic permissions failure')
+    monkeypatch.setattr(native_assets, 'protect_file', fail)
+    with pytest.raises(PermissionError, match='Synthetic'):
+        store.decode(item['id'])
+    assert list(store.cache_dir.iterdir()) == []

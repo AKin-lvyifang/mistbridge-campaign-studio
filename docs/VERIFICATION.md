@@ -4,7 +4,7 @@
 
 - `npm test`: 146 TypeScript domain/LUI/render/viewport/asset tests using Vitest 5.0.3.
 - `npm run build`: TypeScript and optimized Vite build pass.
-- `npm run test:native`: 256 real-file Python/HTTP/packaging, synthetic-asset and mocked compatible-provider tests pass.
+- `npm run test:native`: 299 real-file Python/HTTP/packaging, synthetic-asset, privacy/budget and mocked compatible-provider tests pass on Linux; 2 Windows-only security tests are skipped there and must run in Windows CI.
 - `npm run test:desktop`: 15 launcher/protocol/directory-selection unit tests pass.
 - Frozen Linux x64 native executable: fresh-process import/export, full 326-object authored scene, private HTTP ownership/origin guards, Unicode install path, shutdown, relaunch and failure reporting pass.
 - Independent reviewer reproduced native no-op/edited roundtrips, trigger/object preservation and HTTP guards.
@@ -73,3 +73,14 @@ Disconnect-and-clear was verified through the packaged UI: catalog and DAT selec
 Independent source/security review reproduced the extracted snapshot tests and required two final corrections: a stale README sentence was removed, and DAT input is now explicitly restricted to 7.7/7.8/8.4/8.8/8.9. A regression test rejects older 7.1–7.6 headers even though the dependency enum recognizes them. The tested DAT binary remains synthetic8.9 only.
 
 Review correction validation: final source aggregate checks pass146 TypeScript,256 Python (70 asset-specific),15 desktop tests and production build. Manual screenshots and frozen/packaged smoke evidence above were captured before the final version-gate tightening; their synthetic DAT8.9 input remains allowed. No new native binary is distributed for this documentation/allowlist correction; exact final-source platform builds remain a separate gate.
+
+
+## Cross-platform CI repair — 2026-10-06
+
+Exact published baseline84ca8182c7f1cfc3f32c5da2fb333458c6964d58 passed Linux source validation but failed macOS asset subprocess tests and two Windows POSIX mode assertions. Windows desktop CI incorrectly continued after the Python failure because its multiline PowerShell step retained only the final command's exit code; that green job is not accepted as full validation.
+
+The scoped repair uses atomic/read-back-verified Windows cache DACLs, platform-appropriate memory limits with independent CPU/file guards, structured worker setup errors, and one command per desktop workflow step. New tests preserve meaningful privacy/budget coverage rather than skipping it. Actual Windows DACLs are checked through an independent PowerShell reader in Windows CI. No game assets, live model keys or advisory service were used. Exact fix-commit platform source/build/runtime results remain pending when this source snapshot is prepared.
+
+Review hardening retains the macOS sampled-memory guard through response serialization and write, and pins the Windows cache root against delete/rename access before ACL readback. Real Windows regressions attempt both root and ancestor renames while pinned and verify cleanup releases the handle. These OS-specific checks are not replaced by Linux mocks.
+
+Final local repair verification: independent review and the implementation suite both pass 299 Python tests on Linux, with only the two real-Windows ACL/pinning tests skipped. The 113 focused asset/privacy/budget tests pass, with the same two Windows-only skips. TypeScript remains146 and desktop unit tests15; production build passes. No macOS or Windows repair success is claimed before exact-commit CI.
