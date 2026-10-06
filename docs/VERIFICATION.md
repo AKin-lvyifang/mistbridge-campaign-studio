@@ -4,7 +4,7 @@
 
 - `npm test`: 146 TypeScript domain/LUI/render/viewport/asset tests using Vitest 5.0.3.
 - `npm run build`: TypeScript and optimized Vite build pass.
-- `npm run test:native`: 299 real-file Python/HTTP/packaging, synthetic-asset, privacy/budget and mocked compatible-provider tests pass on Linux; 2 Windows-only security tests are skipped there and must run in Windows CI.
+- `npm run test:native`: 300 real-file Python/HTTP/packaging, synthetic-asset, privacy/budget and mocked compatible-provider tests pass on Linux; 2 Windows-only security tests are skipped there and must run in Windows CI.
 - `npm run test:desktop`: 15 launcher/protocol/directory-selection unit tests pass.
 - Frozen Linux x64 native executable: fresh-process import/export, full 326-object authored scene, private HTTP ownership/origin guards, Unicode install path, shutdown, relaunch and failure reporting pass.
 - Independent reviewer reproduced native no-op/edited roundtrips, trigger/object preservation and HTTP guards.
@@ -84,3 +84,8 @@ The scoped repair uses atomic/read-back-verified Windows cache DACLs, platform-a
 Review hardening retains the macOS sampled-memory guard through response serialization and write, and pins the Windows cache root against delete/rename access before ACL readback. Real Windows regressions attempt both root and ancestor renames while pinned and verify cleanup releases the handle. These OS-specific checks are not replaced by Linux mocks.
 
 Final local repair verification: independent review and the implementation suite both pass 299 Python tests on Linux, with only the two real-Windows ACL/pinning tests skipped. The 113 focused asset/privacy/budget tests pass, with the same two Windows-only skips. TypeScript remains146 and desktop unit tests15; production build passes. No macOS or Windows repair success is claimed before exact-commit CI.
+
+
+The first repair commit6edd67f1aab70a16fdee763de2e9a4e97a967de7 passed Linux and macOS source validation. Windows passed production DACL checks and the real root/ancestor pinning test, but the independent ACL reader hit PowerShell module autoload failure. This test starts legacy Windows PowerShell through Python from the Actions PowerShell7 host. The follow-up removes only PSModulePath from that child process environment so the correct built-in modules are reconstructed; Get-Acl assertions remain unchanged and a platform-neutral regression protects the environment filtering. This follows [Microsoft's documented intermediate-process workaround](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_psmodulepath?view=powershell-7.5). No production code, machine setting, permission or dependency changed in this follow-up. Final exact-commit CI remains the gate.
+
+The test-host follow-up passes the final local aggregate:146 TypeScript,300 Python with2 Windows-only skips,15 desktop tests and production build. Production source hashes remain identical to the prior repair; no new runtime dependency or binary behavior is introduced.

@@ -14,6 +14,27 @@ import pytest
 from server import private_assets as private
 
 
+def _acl_reader_environment(root, environ=None):
+    # PowerShell 7 -> Python -> Windows PowerShell otherwise leaks Core module
+    # paths into the legacy host and breaks Microsoft.PowerShell.Security load.
+    # Remove only this child variable; Windows PowerShell reconstructs its own
+    # built-in paths. No process-global environment or machine setting changes.
+    source = os.environ if environ is None else environ
+    return {**{key: value for key, value in source.items() if key.upper() != 'PSMODULEPATH'},
+            'MISTBRIDGE_TEST_CACHE': str(root)}
+
+
+def test_acl_reader_does_not_inherit_another_powershell_host_module_path(tmp_path):
+    original = {'Path': 'original-path', 'PSModulePath': 'Core/modules',
+                'PSMODULEPATH': 'another-Core/path', 'psmodulepath': 'third-path',
+                'SystemRoot': 'C:/Windows'}
+    result = _acl_reader_environment(tmp_path, original)
+    assert result == {'Path': 'original-path', 'SystemRoot': 'C:/Windows',
+                      'MISTBRIDGE_TEST_CACHE': str(tmp_path)}
+    assert original['PSModulePath'] == 'Core/modules'
+    assert len(original) == 5
+
+
 USER = 'S-1-5-21-1-2-3-1001'
 SYSTEM = 'S-1-5-18'
 FULL = 0x001F01FF
@@ -330,8 +351,7 @@ def test_windows_real_dacl_and_worker_file_inheritance(tmp_path):
             items = $items
         } | ConvertTo-Json -Depth 6 -Compress
         '''
-        environment = os.environ.copy()
-        environment['MISTBRIDGE_TEST_CACHE'] = str(root)
+        environment = _acl_reader_environment(root)
         result = subprocess.run(['powershell.exe', '-NoLogo', '-NoProfile', '-NonInteractive', '-Command', script],
                                 env=environment, capture_output=True, text=True, check=True, timeout=30)
         value = json.loads(result.stdout)
